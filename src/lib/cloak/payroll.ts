@@ -16,6 +16,7 @@ import {
   type Transaction,
   type VersionedTransaction,
 } from "@solana/web3.js";
+import { toPayeePaymentBundle, type PayeePaymentBundle } from "@/lib/payee-bundle";
 import { USDC_MINT } from "@/lib/constants";
 
 export function buildViewingKeyNkFromAdminKp(kp: UtxoKeypair) {
@@ -137,10 +138,13 @@ export async function runPayrollTransfers(
   lastUtxo: Utxo | null;
   lastMerkle: MerkleTree | undefined;
   signatures: string[];
+  /** One JSON bundle per paid line — send to the payee to use on “To wallet”. */
+  payeeBundles: PayeePaymentBundle[];
 }> {
   let current: Utxo = startUtxo;
   let cached: MerkleTree | undefined;
   const sigs: string[] = [];
+  const payeeBundles: PayeePaymentBundle[] = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]!;
     const toPk = parsePubkeyField(line.recipientUtxoPubkeyHex);
@@ -171,14 +175,25 @@ export async function runPayrollTransfers(
     );
     sigs.push(r.signature);
     cached = r.merkleTree;
+    const recipientUtxo = r.outputUtxos[0];
+    if (recipientUtxo) {
+      payeeBundles.push(
+        toPayeePaymentBundle(line.label, recipientUtxo, r.signature)
+      );
+    }
     const next = pickAdminChangeUtxo(r.outputUtxos, adminKp);
     if (!next) {
       if (i < lines.length - 1) {
         throw new Error("No change UTXO after a transfer, but more payees remain. Add funds.");
       }
-      return { lastUtxo: null, lastMerkle: r.merkleTree, signatures: sigs };
+      return {
+        lastUtxo: null,
+        lastMerkle: r.merkleTree,
+        signatures: sigs,
+        payeeBundles,
+      };
     }
     current = next;
   }
-  return { lastUtxo: current, lastMerkle: cached, signatures: sigs };
+  return { lastUtxo: current, lastMerkle: cached, signatures: sigs, payeeBundles };
 }

@@ -4,8 +4,9 @@
 @source "../**/*.{js,ts,jsx,tsx,mdx}";
 @source "./**/*.{js,ts,jsx,tsx,mdx}";
 
-/* Fallback: if any pipeline step fails, body is still dark (plain CSS, no @apply). */
-html {
+/* Fallback: if any pipeline step fails, the shell is still dark (plain CSS, no @apply). */
+html,
+body {
   background-color: #020617;
   color: #e2e8f0;
 }
@@ -47,7 +48,12 @@ html {
 
 @layer components {
   .app-card {
-    @apply rounded-xl border border-slate-800/90 bg-slate-900/50 p-5 shadow-lg shadow-black/30 backdrop-blur-sm;
+    @apply rounded-xl border border-slate-800/90 bg-slate-900/50 p-5 shadow-lg shadow-black/30 backdrop-blur-sm transition-shadow duration-200;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .app-card {
+      @apply hover:border-slate-700/90 hover:shadow-sky-950/20;
+    }
   }
 
   .app-input {

@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { InfoTip } from "@/components/ui/InfoTip";
+import { TIP } from "@/lib/ui-tips";
 
 /** Compact intro — details live in the form sections below. */
 export function PayrollHero() {
@@ -14,16 +18,20 @@ export function PayrollHero() {
         Treasury console
       </h1>
       <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">
-        Shield with Cloak, pay contractors by{" "}
-        <span className="text-slate-200">UTXO public key</span> (from{" "}
+        Move public USDC into Cloak, pay contractors by their{" "}
+        <span className="inline-flex items-baseline gap-0.5 text-slate-200">
+          UTXO public key
+          <InfoTip text={TIP.utxoPublicKey} className="translate-y-0.5" />
+        </span>{" "}
+        (from{" "}
         <Link
           href="/payee"
           className="text-sky-400/90 underline decoration-sky-500/30 underline-offset-2 hover:text-sky-300"
         >
           Payee keys
         </Link>
-        ), then reconcile on-chain.{" "}
-        <span className="whitespace-nowrap text-slate-500">USDC mainnet.</span>
+        ), then reconcile.{" "}
+        <span className="whitespace-nowrap text-slate-500">USDC mainnet — sign with Phantom in the header.</span>
       </p>
     </div>
   );

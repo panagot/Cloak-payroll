@@ -14,6 +14,7 @@ import {
   type PayrollLine,
   runPayrollTransfers,
 } from "@/lib/cloak/payroll";
+import type { PayeePaymentBundle } from "@/lib/payee-bundle";
 import { CLOAK_PROGRAM_ID, USDC_MINT } from "@/lib/constants";
 import {
   clearSpendableUtxo,
@@ -22,6 +23,8 @@ import {
 } from "@/lib/spendable-utxo";
 import { bigintToHex, sumUtxoAmounts, type Utxo, type UtxoKeypair } from "@cloak.dev/sdk";
 import type { ComplianceReport, MerkleTree } from "@cloak.dev/sdk";
+import { InfoTip } from "@/components/ui/InfoTip";
+import { TIP } from "@/lib/ui-tips";
 import { PayrollHero } from "../shell/PayrollHero";
 import { RecipientTable } from "./RecipientTable";
 
@@ -36,13 +39,16 @@ function nkToHex(nk: Uint8Array) {
     .join("");
 }
 
-function StepBadge({ n, label }: { n: number; label: string }) {
+function StepBadge({ n, label, tip }: { n: number; label: string; tip?: string }) {
   return (
     <div className="mb-3 flex items-center gap-3">
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-sky-500/15 text-xs font-bold text-sky-400 ring-1 ring-sky-500/25">
         {n}
       </span>
-      <h2 className="text-sm font-semibold text-slate-100">{label}</h2>
+      <h2 className="flex items-center gap-1 text-sm font-semibold text-slate-100">
+        {label}
+        {tip ? <InfoTip text={tip} /> : null}
+      </h2>
     </div>
   );
 }
@@ -65,6 +71,7 @@ export function PayrollDashboard() {
   const [viewKeyHex, setViewKeyHex] = useState<string | null>(null);
   const [viewKeyRevealed, setViewKeyRevealed] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [payeeBundles, setPayeeBundles] = useState<PayeePaymentBundle[]>([]);
 
   useEffect(() => {
     let c = true;
@@ -209,18 +216,20 @@ export function PayrollDashboard() {
         recipientUtxoPubkeyHex: x.line.recipientUtxoPubkeyHex,
         amountUnits: x.amountUnits,
       }));
-      const { lastUtxo, lastMerkle, signatures } = await runPayrollTransfers(
-        connection,
-        w.wallet,
-        w.signTransaction,
-        w.signMessage,
-        w.adminKp,
-        utxo,
-        resolved,
-        (m) => setLoading({ msg: m })
-      );
+      const { lastUtxo, lastMerkle, signatures, payeeBundles: bundles } =
+        await runPayrollTransfers(
+          connection,
+          w.wallet,
+          w.signTransaction,
+          w.signMessage,
+          w.adminKp,
+          utxo,
+          resolved,
+          (m) => setLoading({ msg: m })
+        );
       setMerkle(lastMerkle);
       setLastSigs(signatures);
+      setPayeeBundles(bundles);
       if (lastUtxo) {
         setUtxo(lastUtxo);
         saveSpendableUtxo(lastUtxo);
@@ -275,8 +284,8 @@ export function PayrollDashboard() {
         <PayrollHero />
 
         {!connected && (
-          <p className="mb-5 text-sm text-slate-500">
-            Use <span className="text-slate-400">Connect</span> in the header to start.
+          <p className="mb-5 rounded-lg border border-slate-800/80 bg-slate-900/40 px-3 py-2.5 text-sm text-slate-400">
+            Connect a wallet in the header to begin — the same wallet will hold public USDC to shield and will sign each Cloak transaction.
           </p>
         )}
 
@@ -314,14 +323,20 @@ export function PayrollDashboard() {
             id="section-treasury-utxo"
             className="app-card mb-5 scroll-mt-24"
           >
-            <h2 className="text-sm font-semibold text-slate-200">Treasury UTXO</h2>
+            <h2 className="flex items-center gap-1 text-sm font-semibold text-slate-200">
+              Treasury UTXO
+              <InfoTip text={TIP.treasuryUtxo} />
+            </h2>
             <p className="mt-0.5 text-xs text-slate-500">Shielded change stays on this key in this browser.</p>
             <p className="mt-3 break-all rounded-md bg-slate-950/50 px-3 py-2 font-mono text-xs text-slate-300 ring-1 ring-slate-800/80">
               {adminUtxoPub}
             </p>
             <dl className="mt-4 flex flex-wrap items-baseline gap-6">
               <div>
-                <dt className="text-xs text-slate-500">Shielded (private)</dt>
+                <dt className="flex items-center gap-1 text-xs text-slate-500">
+                  Shielded (private)
+                  <InfoTip text={TIP.shieldedBalance} className="translate-y-px" />
+                </dt>
                 <dd className="text-lg font-semibold tabular-nums text-sky-300">
                   {utxo ? formatUsdcFromUnits(shieldedBal) : "0"}{" "}
                   <span className="text-sm font-medium text-slate-500">USDC</span>
@@ -336,11 +351,14 @@ export function PayrollDashboard() {
             id="section-shield"
             className="app-card mb-5 scroll-mt-24"
           >
-            <StepBadge n={1} label="Shield USDC" />
+            <StepBadge n={1} label="Shield USDC" tip={TIP.shieldStep} />
             <p className="text-sm text-slate-500">From your wallet’s public USDC balance. Start small on mainnet.</p>
             <div className="mt-4 flex max-w-md flex-col gap-3 sm:flex-row sm:items-end">
               <div className="min-w-0 flex-1">
-                <span className="app-label">Amount (USDC)</span>
+                <span className="app-label flex w-full items-baseline justify-between gap-1">
+                  <span>Amount (USDC)</span>
+                  <InfoTip text={TIP.shieldAmount} className="translate-y-px" />
+                </span>
                 <input
                   className="app-input"
                   value={depositInput}
@@ -354,6 +372,7 @@ export function PayrollDashboard() {
                 disabled={!!loading}
                 onClick={() => void onDeposit()}
                 className="btn-primary shrink-0"
+                title="Deposit public USDC from your connected wallet into the shielded pool for this session."
               >
                 Shield USDC
               </button>
@@ -366,7 +385,7 @@ export function PayrollDashboard() {
             id="section-payees"
             className="app-card mb-5 scroll-mt-24"
           >
-            <StepBadge n={2} label="Payee lines" />
+            <StepBadge n={2} label="Payee lines" tip={TIP.runPayroll} />
             <p className="mb-3 text-sm text-slate-500">
               64-hex UTXO keys from{" "}
               <a className="text-sky-400/90 hover:text-sky-300" href="/payee">Payee keys</a>
@@ -386,6 +405,7 @@ export function PayrollDashboard() {
               disabled={!!loading}
               onClick={() => void onRunPayroll()}
               className="btn-primary min-h-[2.75rem] flex-1"
+              title={TIP.runPayroll}
             >
               Run private payroll
             </button>
@@ -394,10 +414,61 @@ export function PayrollDashboard() {
               disabled={!!loading}
               onClick={() => void onScan()}
               className="btn-secondary min-h-[2.75rem] sm:max-w-xs"
+              title={TIP.reconcile}
             >
               Reconcile
             </button>
           </div>
+        )}
+
+        {payeeBundles.length > 0 && (
+          <section
+            id="section-payee-bundles"
+            className="app-card mb-6 scroll-mt-24"
+          >
+            <h3 className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Payee payment bundles
+              <InfoTip text={TIP.payeeBundle} />
+            </h3>
+            <p className="mt-1 text-sm text-slate-400">
+              Send each JSON to the payee (email, chat). They paste it on the{" "}
+              <a
+                className="text-sky-400/90 underline decoration-sky-500/30 hover:text-sky-300"
+                href="/withdraw"
+              >
+                To wallet
+              </a>{" "}
+              tab with the same UTXO receive key they used here.
+            </p>
+            <ul className="mt-3 space-y-3">
+              {payeeBundles.map((b, i) => (
+                <li
+                  key={`${b.transferSignature}-${i}`}
+                  className="rounded-lg border border-slate-800/80 bg-slate-950/40 p-3"
+                >
+                  <p className="text-xs text-slate-500">
+                    {b.label} — {formatUsdcFromUnits(BigInt(b.amount))} USDC
+                  </p>
+                  <button
+                    type="button"
+                    className="btn-secondary mt-2 text-xs"
+                    title={TIP.copyBundle}
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(
+                          JSON.stringify(b, null, 2)
+                        );
+                      } catch {
+                        setErr("Could not copy to clipboard");
+                      }
+                    }}
+                  >
+                    Copy JSON
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
 
         {lastSigs.length > 0 && (
@@ -472,7 +543,10 @@ export function PayrollDashboard() {
             id="section-viewing-key"
             className="mb-8 scroll-mt-24 rounded-xl border border-amber-500/20 bg-amber-950/25 p-5 text-sm text-amber-100/90 ring-1 ring-amber-500/10"
           >
-            <h3 className="text-sm font-semibold text-amber-200/95">Viewing key</h3>
+            <h3 className="flex items-center gap-1 text-sm font-semibold text-amber-200/95">
+              Viewing key
+              <InfoTip text={TIP.viewKey} className="[&_button]:border-amber-500/30 [&_button]:text-amber-300/90 [&_button]:hover:text-amber-200" />
+            </h3>
             <p className="mt-1 text-amber-100/70">
               The nk can decrypt on-chain history for this treasury. Store offline; never
               share in public channels.

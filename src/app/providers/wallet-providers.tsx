@@ -8,7 +8,6 @@ import {
 } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { useMemo, type ReactNode } from "react";
-import "@solana/wallet-adapter-react-ui/styles.css";
 
 export function WalletContextProvider({ children }: { children: ReactNode }) {
   const endpoint = useMemo(

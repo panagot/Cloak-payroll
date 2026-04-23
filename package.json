@@ -7,7 +7,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:types": "tsc --noEmit",
+    "test:lint": "eslint .",
+    "test:smoke": "tsx --tsconfig tsconfig.json src/scripts/smoke-lib.ts",
+    "test:all": "npm run test:types && npm run test:lint && npm run test:smoke && npm run build"
   },
   "dependencies": {
     "@cloak.dev/sdk": "^0.1.0",
@@ -23,14 +27,15 @@
     "react-dom": "19.1.0"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.5.15",
-    "@eslint/eslintrc": "^3"
+    "tailwindcss": "^4",
+    "tsx": "^4.21.0",
+    "typescript": "^5"
   }
 }

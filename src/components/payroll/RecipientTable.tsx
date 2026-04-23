@@ -1,6 +1,8 @@
 "use client";
 
+import { AppLabelWithTip } from "@/components/ui/InfoTip";
 import type { PayrollLine } from "@/lib/cloak/payroll";
+import { TIP } from "@/lib/ui-tips";
 
 type Props = {
   lines: PayrollLine[];
@@ -17,11 +19,11 @@ export function RecipientTable({ lines, onChange }: Props) {
       {lines.map((l, i) => (
         <div
           key={i}
-          className="rounded-lg border border-slate-800/80 bg-slate-950/30 p-4 ring-1 ring-slate-800/40"
+          className="rounded-lg border border-slate-800/80 bg-slate-950/30 p-4 ring-1 ring-slate-800/40 transition-shadow hover:ring-slate-700/50"
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
             <label className="sm:col-span-2">
-              <span className="app-label">Name</span>
+              <AppLabelWithTip label="Name" tip={TIP.payeeName} />
               <input
                 className="app-input"
                 value={l.label}
@@ -30,7 +32,7 @@ export function RecipientTable({ lines, onChange }: Props) {
               />
             </label>
             <label className="sm:col-span-6">
-              <span className="app-label">UTXO public key (hex)</span>
+              <AppLabelWithTip label="UTXO public key (hex)" tip={TIP.payeeHex} />
               <input
                 className="app-input font-mono text-xs"
                 placeholder="64 hex from payee page"
@@ -43,7 +45,7 @@ export function RecipientTable({ lines, onChange }: Props) {
               />
             </label>
             <label className="sm:col-span-2">
-              <span className="app-label">USDC</span>
+              <AppLabelWithTip label="USDC" tip={TIP.payeeAmount} />
               <input
                 className="app-input font-mono text-sm"
                 value={l.amount}

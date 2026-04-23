@@ -4,10 +4,12 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SITE } from "@/lib/site-links";
+import { TIP } from "@/lib/ui-tips";
 
 const nav = [
-  { href: "/", label: "Treasury" },
-  { href: "/payee", label: "Payee keys" },
+  { href: "/", label: "Treasury", title: TIP.navTreasury },
+  { href: "/payee", label: "Payee keys", title: TIP.navPayee },
+  { href: "/withdraw", label: "To wallet", title: TIP.navWallet },
 ] as const;
 
 export function SiteHeader() {
@@ -21,11 +23,14 @@ export function SiteHeader() {
           <div className="flex min-w-0 flex-col">
             <Link
               href="/"
+              title={TIP.brand}
               className="font-semibold tracking-tight text-slate-100 transition hover:text-white"
             >
               {SITE.name}
             </Link>
-            <span className="text-[11px] text-slate-500 md:hidden">{SITE.context}</span>
+            <span className="text-[11px] text-slate-500 md:hidden" title={TIP.brand}>
+              {SITE.context}
+            </span>
           </div>
           <nav
             className="flex flex-wrap items-center gap-1 sm:gap-2 md:hidden"
@@ -37,6 +42,7 @@ export function SiteHeader() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  title={item.title}
                   className={
                     "rounded-md px-2.5 py-1.5 text-sm font-medium transition " +
                     (active
@@ -49,7 +55,10 @@ export function SiteHeader() {
               );
             })}
           </nav>
-          <div className="flex shrink-0 items-center sm:pl-2">
+          <div
+            className="flex shrink-0 items-center sm:pl-2"
+            title={TIP.walletConnect}
+          >
             <WalletMultiButton />
           </div>
         </div>
