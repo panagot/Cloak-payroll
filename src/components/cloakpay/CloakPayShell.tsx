@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { CloakPayPillNav } from "./CloakPayPillNav";
 
 export function CloakPayShell({ children }: { children: ReactNode }) {
   return (
@@ -13,7 +14,10 @@ export function CloakPayShell({ children }: { children: ReactNode }) {
         }}
         aria-hidden
       />
-      {children}
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+        <CloakPayPillNav />
+        {children}
+      </div>
     </div>
   );
 }

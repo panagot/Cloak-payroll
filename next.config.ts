@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 import path from "node:path";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [{ source: "/cloak-pay/present", destination: "/cloak-pay/merchant", permanent: false }];
+  },
   serverExternalPackages: ["@cloak.dev/sdk", "@solana/web3.js"],
   images: {
     remotePatterns: [

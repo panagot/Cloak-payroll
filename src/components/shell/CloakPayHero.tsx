@@ -7,11 +7,13 @@ export function CloakPayHero() {
   return (
     <div
       id="section-cloakpay-intro"
-      className="mb-8 scroll-mt-24 border-b border-indigo-100/50 pb-8"
+      className="relative mb-8 scroll-mt-24 overflow-hidden rounded-2xl border border-emerald-200/40 bg-gradient-to-br from-white via-emerald-50/30 to-sky-50/20 p-6 shadow-md shadow-emerald-100/20 ring-1 ring-white/60 sm:p-8"
     >
-      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-700/90">
-        Shielded at the counter
-      </p>
+      <div
+        className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-200/20 blur-3xl"
+        aria-hidden
+      />
+      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-800/90">Shielded at the counter</p>
       <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Cloak Pay</h1>
       <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600">
         A <strong className="font-medium text-slate-800">pay link and QR</strong> for your business: customers open it on
@@ -19,7 +21,7 @@ export function CloakPayHero() {
         <span className="inline-flex flex-wrap items-baseline gap-1 text-slate-800">
           public → shielded → private settlement
           <InfoTip
-            text="This page is a product + UX prototype. On-chain pay flows would plug into the same Cloak and wallet patterns as Treasury and Get paid."
+            text="This app is a product + UX prototype. On-chain pay flows would plug into the same Cloak and wallet patterns as Treasury and Get paid."
             className="translate-y-0.5"
           />
         </span>{" "}

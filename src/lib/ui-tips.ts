@@ -11,11 +11,13 @@ export const TIP = {
   navCloakPay:
     "Cloak Pay: in-person and link pay; QR, merchant setup, customer view, and activity (prototype).",
   cloakNavOverview: "Cloak Pay home — journey and links to subpages.",
-  cloakNavMerchant: "Display name, presets, and what you show to customers (prototype).",
-  cloakNavPresent: "Build the pay link and print or share the QR for your counter.",
+  cloakNavMerchant:
+    "In one place: 64-hex UTXO receive key, name and defaults, and pay links/QR that pass your UTXO (mpk) in the query (prototype).",
   cloakNavCustomer: "What the customer sees after scan—shielded pay flow (mock).",
   cloakNavActivity: "Recent in-person and link payments (sample data for demo).",
   cloakNavSettings: "Disclosure and environment; not a custodial product.",
+  cloakPayMerchantUtxo:
+    "Cloak’s shielded ‘address’ for this business: 64 hex characters. It is not a Solana wallet address. The pay link / QR opens the customer page; a full integration would route private USDC to this UTXO the same way payroll uses a 64-hex line.",
   utxoPublicKey:
     "Cloak’s shielded address: 64 hex characters. The treasury pastes it into payroll so funds route to your private UTXO — not a normal wallet address.",
   payeeName: "A label for you to remember the row (e.g. contractor or invoice id).",

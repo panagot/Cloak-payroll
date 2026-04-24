@@ -12,7 +12,10 @@
     "test:types": "tsc --noEmit",
     "test:lint": "eslint .",
     "test:smoke": "tsx --tsconfig tsconfig.json src/scripts/smoke-lib.ts",
-    "test:all": "npm run test:types && npm run test:lint && npm run test:smoke && npm run build"
+    "test:cloak-pay:url": "node src/scripts/verify-cloak-pay-url-build.mjs",
+    "test:cloak-pay:routes": "node src/scripts/verify-cloak-pay-routes.mjs",
+    "test:cloak-pay": "npm run test:cloak-pay:url && npm run test:cloak-pay:routes",
+    "test:all": "npm run test:types && npm run test:lint && npm run test:smoke && npm run test:cloak-pay:url && npm run build"
   },
   "dependencies": {
     "@cloak.dev/sdk": "^0.1.0",

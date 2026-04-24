@@ -17,7 +17,7 @@ const treasury: Step[] = [
 ];
 
 const cloakPay: Step[] = [
-  { n: "1", label: "Your pay link", note: "A stable URL you print or add to a QR" },
+  { n: "1", label: "Key + pay link", note: "Merchant: UTXO key, then link/QR with it" },
   { n: "2", label: "Scan or tap", note: "Customer opens the flow on their phone" },
   { n: "3", label: "Shielded USDC", note: "Cloak path, not a bare wallet address" },
   { n: "4", label: "You get paid", note: "Reconcile with the same UTXO tools as payroll" },

@@ -6,10 +6,27 @@ const b = CLOAK_PAY.path;
 export const CLOAK_PAY_SUBROUTES = [
   { href: b, label: "Overview", title: TIP.cloakNavOverview },
   { href: `${b}/merchant`, label: "Merchant", title: TIP.cloakNavMerchant },
-  { href: `${b}/present`, label: "Link & QR", title: TIP.cloakNavPresent },
   { href: `${b}/pay`, label: "Customer pay", title: TIP.cloakNavCustomer },
   { href: `${b}/activity`, label: "Activity", title: TIP.cloakNavActivity },
   { href: `${b}/settings`, label: "Settings", title: TIP.cloakNavSettings },
+] as const;
+
+/** One-line blurbs for the overview grid (excludes self / overview). */
+export const CLOAK_PAY_CTA_CARDS: readonly { href: string; label: string; blurb: string; icon: string }[] = [
+  {
+    href: `${b}/merchant`,
+    label: "Merchant",
+    blurb: "Generate your receive key, set branding, and build pay links/QR (with your UTXO) for the register.",
+    icon: "🏪",
+  },
+  { href: `${b}/pay`, label: "Customer pay", blurb: "The checkout your buyer sees—now with a payment simulation.", icon: "💳" },
+  {
+    href: `${b}/activity`,
+    label: "Activity",
+    blurb: "Sample list of link and counter payments; export is stubbed.",
+    icon: "list",
+  },
+  { href: `${b}/settings`, label: "Settings", blurb: "Cluster, disclosure, and links back to the main app.", icon: "⚙️" },
 ] as const;
 
 export function getCloakPayToc(pathname: string): { id: string; label: string }[] {
@@ -24,26 +41,24 @@ export function getCloakPayToc(pathname: string): { id: string; label: string }[
   }
   if (p === `${b}/merchant`) {
     return [
+      { id: "section-merchant-utxo", label: "Receive key" },
       { id: "section-merchant-profile", label: "Business profile" },
-      { id: "section-merchant-presets", label: "Presets" },
+      { id: "section-merchant-presets", label: "Default amounts" },
+      { id: "section-merchant-qr", label: "Pay link & QR" },
+      { id: "section-merchant-preview", label: "Preview" },
       { id: "section-merchant-hint", label: "Checklist" },
-    ];
-  }
-  if (p === `${b}/present`) {
-    return [
-      { id: "section-present-qr", label: "Link & QR" },
-      { id: "section-present-print", label: "Print" },
     ];
   }
   if (p === `${b}/pay`) {
     return [
-      { id: "section-customer-amount", label: "Request" },
-      { id: "section-customer-flow", label: "How to pay" },
-      { id: "section-customer-note", label: "Status" },
+      { id: "section-customer-order", label: "Order" },
+      { id: "section-customer-checkout", label: "Pay" },
+      { id: "section-customer-disclaimer", label: "More" },
     ];
   }
   if (p === `${b}/activity`) {
     return [
+      { id: "section-activity-summary", label: "Summary" },
       { id: "section-activity-table", label: "Payments" },
       { id: "section-activity-export", label: "Export" },
     ];
@@ -51,7 +66,8 @@ export function getCloakPayToc(pathname: string): { id: string; label: string }[
   if (p === `${b}/settings`) {
     return [
       { id: "section-settings-mode", label: "Environment" },
-      { id: "section-settings-data", label: "Data" },
+      { id: "section-settings-privacy", label: "Privacy" },
+      { id: "section-settings-data", label: "Links" },
     ];
   }
   return [];
