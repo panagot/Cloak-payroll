@@ -7,10 +7,15 @@ const MAINNET_USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 /** Circle devnet USDC (6 decimals) — must match a Cloak shield pool for this mint on devnet. */
 const DEVNET_USDC = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
 
+/**
+ * Public defaults **without** `api.*.solana.com` (Solana Foundation) — those often return
+ * 403 in browsers, which triggered the in-app “Public Solana RPC” warning on Vercel.
+ * Ankr’s public pool is a reasonable default; override with `NEXT_PUBLIC_SOLANA_RPC` (e.g. Helius) for production.
+ */
 const DEFAULT_RPC_BY_CLUSTER: Record<SolanaClusterId, string> = {
-  "mainnet-beta": "https://api.mainnet-beta.solana.com",
-  devnet: "https://api.devnet.solana.com",
-  testnet: "https://api.testnet.solana.com",
+  "mainnet-beta": "https://rpc.ankr.com/solana",
+  devnet: "https://rpc.ankr.com/solana_devnet",
+  testnet: "https://rpc.ankr.com/solana_testnet",
 };
 
 function parseCluster(): SolanaClusterId {

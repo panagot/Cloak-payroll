@@ -28,14 +28,14 @@ A small **treasury console** for teams that need **USDC payroll to contractors w
 ```bash
 cd cloak-shielded-payroll
 cp .env.example .env.local
-# Copy .env.example, then set NEXT_PUBLIC_SOLANA_RPC to a provider URL (see “RPC 403” below)
+# Optional: set NEXT_PUBLIC_SOLANA_RPC to Helius/QuickNode/etc. (see “RPC” below)
 npm install
 npm run dev
 ```
 
 Always run these commands **inside `cloak-shielded-payroll/`** (not the parent `Cloak Track` folder). If the page looks **unstyled / white**, stop the dev server and run `npm run dev:clean` (clears `.next` then starts again).
 
-**RPC 403 (“Access forbidden”):** The default Solana public RPC (`https://api.mainnet-beta.solana.com`) often **blocks or rate-limits** browser traffic. If shield / payroll errors mention **403** or `getAccount` failing, set **`NEXT_PUBLIC_SOLANA_RPC`** in `.env.local` to a **mainnet** URL from [Helius](https://helius.dev), [QuickNode](https://www.quicknode.com), [Alchemy](https://www.alchemy.com/solana), or similar (free tiers are fine), then restart `npm run dev`. The in-app **amber “Public Solana RPC”** banner appears when you are still on the public endpoint.
+**RPC:** The app’s built-in default is **not** `api.*.solana.com` (those often return **403** in browsers). It uses **Ankr** public pool URLs unless you set **`NEXT_PUBLIC_SOLANA_RPC`**. If you still see **403** (or need higher limits), set `.env.local` to a **mainnet** provider URL from [Helius](https://helius.dev), [QuickNode](https://www.quicknode.com), [Alchemy](https://www.alchemy.com/solana), or similar, then restart `npm run dev`. The **amber “Public Solana RPC”** banner only appears if your configured RPC is explicitly a **Solana Foundation** `https://api.*.solana.com` URL.
 
 Open the URL printed by Next (e.g. [http://localhost:3000](http://localhost:3000)). Use a wallet with **USDC** on the cluster you selected and a small test amount. Phantom is configured out of the box.
 
@@ -47,7 +47,7 @@ The app reads **`NEXT_PUBLIC_SOLANA_NETWORK`** (`mainnet-beta` default, or `devn
 
 1. Copy `.env.example` → `.env.local` and set:
    - `NEXT_PUBLIC_SOLANA_NETWORK=devnet`
-   - Optionally `NEXT_PUBLIC_SOLANA_RPC=https://api.devnet.solana.com`
+   - Optionally `NEXT_PUBLIC_SOLANA_RPC=…` (default devnet is Ankr public; no need to use `api.devnet.solana.com` for local dev)
 2. In **Phantom**: Settings → Developer Settings → **Devnet**, then airdrop devnet SOL and get **devnet USDC** (e.g. spl-token faucet / Circle devnet USDC for mint `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`).
 3. Restart `npm run dev`. The yellow **cluster banner** reminds you to match Phantom to the app.
 
