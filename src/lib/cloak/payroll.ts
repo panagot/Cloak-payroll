@@ -17,7 +17,7 @@ import {
   type VersionedTransaction,
 } from "@solana/web3.js";
 import { toPayeePaymentBundle, type PayeePaymentBundle } from "@/lib/payee-bundle";
-import { USDC_MINT } from "@/lib/constants";
+import { getCloakRelayUrl, USDC_MINT } from "@/lib/constants";
 
 export function buildViewingKeyNkFromAdminKp(kp: UtxoKeypair) {
   return getNkFromUtxoPrivateKey(kp.privateKey);
@@ -38,6 +38,7 @@ export function baseTransactOptions(
   return {
     connection,
     programId: CLOAK_PROGRAM_ID,
+    relayUrl: getCloakRelayUrl(),
     signTransaction,
     signMessage,
     walletPublicKey: wallet,

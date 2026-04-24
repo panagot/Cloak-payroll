@@ -5,7 +5,7 @@ import {
   type Utxo,
   type UtxoKeypair,
 } from "@cloak.dev/sdk";
-import { CLOAK_PROGRAM_ID, USDC_MINT } from "@/lib/constants";
+import { CLOAK_PROGRAM_ID, getCloakRelayUrl, USDC_MINT } from "@/lib/constants";
 import {
   type Connection,
   type PublicKey,
@@ -28,6 +28,7 @@ export function buildPayeeTransactOptions(
   return {
     connection,
     programId: CLOAK_PROGRAM_ID,
+    relayUrl: getCloakRelayUrl(),
     signTransaction,
     signMessage,
     walletPublicKey: wallet,

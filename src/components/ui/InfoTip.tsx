@@ -20,7 +20,7 @@ export function InfoTip({ text, titleOverride, className = "" }: Props) {
     <span className={`group/inf relative inline-flex items-center align-middle ${className}`}>
       <button
         type="button"
-        className="ms-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-slate-600/70 bg-slate-800/40 text-[10px] font-bold text-slate-500 transition hover:border-sky-500/50 hover:bg-slate-800/80 hover:text-sky-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 motion-safe:duration-150"
+        className="ms-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-indigo-200/80 bg-indigo-50/90 text-[10px] font-bold text-indigo-600 transition hover:border-indigo-400 hover:bg-indigo-100/80 hover:text-indigo-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/50 motion-safe:duration-150"
         aria-describedby={id}
         title={nativeTitle}
       >
@@ -30,9 +30,9 @@ export function InfoTip({ text, titleOverride, className = "" }: Props) {
       <span
         id={id}
         role="tooltip"
-        className="pointer-events-none absolute left-1/2 top-full z-[60] mt-1.5 w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 rounded-lg border border-slate-600/80 bg-slate-900/98 p-0 opacity-0 shadow-lg shadow-black/50 ring-1 ring-white/5 transition-opacity duration-150 [text-wrap:pretty] group-hover/inf:opacity-100 group-focus-within/inf:opacity-100 motion-reduce:transition-none"
+        className="pointer-events-none absolute left-1/2 top-full z-[60] mt-1.5 w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 rounded-lg border border-indigo-200/50 bg-white p-0 opacity-0 shadow-lg shadow-indigo-200/30 ring-1 ring-indigo-100/50 transition-opacity duration-150 [text-wrap:pretty] group-hover/inf:opacity-100 group-focus-within/inf:opacity-100 motion-reduce:transition-none"
       >
-        <span className="block max-h-64 overflow-y-auto px-3 py-2.5 text-left text-xs font-normal font-sans not-italic leading-relaxed text-slate-200 normal-case">
+        <span className="block max-h-64 overflow-y-auto px-3 py-2.5 text-left text-xs font-normal font-sans not-italic leading-relaxed text-slate-800 normal-case">
           {text}
         </span>
       </span>

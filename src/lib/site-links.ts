@@ -5,6 +5,18 @@ export const SITE = {
   context: "Colosseum · Frontier / Cloak track",
 } as const;
 
+/** In-person & link-based shielded checkouts — related product surface in this app. */
+export const CLOAK_PAY = {
+  label: "Cloak Pay",
+  path: "/cloak-pay",
+  short: "Scan or tap — shielded USDC for your business",
+} as const;
+
+/** True on `/cloak-pay` (and subpaths) for active nav / page sections. */
+export function isCloakPayPath(pathname: string) {
+  return pathname === CLOAK_PAY.path || pathname.startsWith(`${CLOAK_PAY.path}/`);
+}
+
 export const LINKS = {
   /** [Superteam — Cloak track](https://superteam.fun/earn/listing/cloak-track) */
   bounty: "https://superteam.fun/earn/listing/cloak-track",

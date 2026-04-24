@@ -28,12 +28,30 @@ A small **treasury console** for teams that need **USDC payroll to contractors w
 ```bash
 cd cloak-shielded-payroll
 cp .env.example .env.local
-# set NEXT_PUBLIC_SOLANA_RPC to a good mainnet RPC
+# Copy .env.example, then set NEXT_PUBLIC_SOLANA_RPC to a provider URL (see “RPC 403” below)
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Use a wallet with **USDC (mainnet)** and a small test amount. Phantom is configured out of the box.
+Always run these commands **inside `cloak-shielded-payroll/`** (not the parent `Cloak Track` folder). If the page looks **unstyled / white**, stop the dev server and run `npm run dev:clean` (clears `.next` then starts again).
+
+**RPC 403 (“Access forbidden”):** The default Solana public RPC (`https://api.mainnet-beta.solana.com`) often **blocks or rate-limits** browser traffic. If shield / payroll errors mention **403** or `getAccount` failing, set **`NEXT_PUBLIC_SOLANA_RPC`** in `.env.local` to a **mainnet** URL from [Helius](https://helius.dev), [QuickNode](https://www.quicknode.com), [Alchemy](https://www.alchemy.com/solana), or similar (free tiers are fine), then restart `npm run dev`. The in-app **amber “Public Solana RPC”** banner appears when you are still on the public endpoint.
+
+Open the URL printed by Next (e.g. [http://localhost:3000](http://localhost:3000)). Use a wallet with **USDC** on the cluster you selected and a small test amount. Phantom is configured out of the box.
+
+**Cloak API / CORS:** The SDK calls `https://api.cloak.ag` for viewing-key registration, commitments, transact relay, etc. Browsers often block that from non-standard `localhost` ports. This app adds **`/api/cloak-relay`** — a server proxy to `api.cloak.ag` — and uses it as the relay base in the browser so those calls are **same-origin**. You normally do not need to set `NEXT_PUBLIC_CLOAK_RELAY_URL`.
+
+### Devnet / testnet (e.g. demo video without mainnet funds)
+
+The app reads **`NEXT_PUBLIC_SOLANA_NETWORK`** (`mainnet-beta` default, or `devnet` / `testnet`). It picks a **default RPC** and (unless you set **`NEXT_PUBLIC_USDC_MINT`**) uses **mainnet USDC**, **Circle devnet USDC**, or **requires a mint for testnet**.
+
+1. Copy `.env.example` → `.env.local` and set:
+   - `NEXT_PUBLIC_SOLANA_NETWORK=devnet`
+   - Optionally `NEXT_PUBLIC_SOLANA_RPC=https://api.devnet.solana.com`
+2. In **Phantom**: Settings → Developer Settings → **Devnet**, then airdrop devnet SOL and get **devnet USDC** (e.g. spl-token faucet / Circle devnet USDC for mint `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`).
+3. Restart `npm run dev`. The yellow **cluster banner** reminds you to match Phantom to the app.
+
+**Important:** Cloak’s default **relay** (`https://api.cloak.ag`) is built around **mainnet** production traffic. **Shield / transfer / withdraw on devnet may fail** if the program, shield pool for that USDC mint, or relay Merkle state are not available for your cluster. If devnet errors persist, record the demo on **mainnet with a tiny USDC amount** instead.
 
 ### Payee flow
 

@@ -3,6 +3,15 @@ import path from "node:path";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["@cloak.dev/sdk", "@solana/web3.js"],
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "api.qrserver.com",
+        pathname: "/v1/**",
+      },
+    ],
+  },
   webpack: (config) => {
     const bufferShim = path.join(
       process.cwd(),

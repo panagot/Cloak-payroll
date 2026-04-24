@@ -19,7 +19,7 @@ export function RecipientTable({ lines, onChange }: Props) {
       {lines.map((l, i) => (
         <div
           key={i}
-          className="rounded-lg border border-slate-800/80 bg-slate-950/30 p-4 ring-1 ring-slate-800/40 transition-shadow hover:ring-slate-700/50"
+          className="rounded-xl border border-indigo-100/50 bg-white/70 p-4 shadow-sm shadow-indigo-100/30 transition-shadow hover:border-indigo-200/50 hover:shadow-indigo-100/50"
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
             <label className="sm:col-span-2">
@@ -32,10 +32,10 @@ export function RecipientTable({ lines, onChange }: Props) {
               />
             </label>
             <label className="sm:col-span-6">
-              <AppLabelWithTip label="UTXO public key (hex)" tip={TIP.payeeHex} />
+              <AppLabelWithTip label="Payee private receive key (hex)" tip={TIP.payeeHex} />
               <input
                 className="app-input font-mono text-xs"
-                placeholder="64 hex from payee page"
+                placeholder="64 characters from their Payee page"
                 value={l.recipientUtxoPubkeyHex}
                 onChange={(e) =>
                   setLine(i, { recipientUtxoPubkeyHex: e.target.value.trim() })

@@ -15,7 +15,12 @@ import {
   runPayrollTransfers,
 } from "@/lib/cloak/payroll";
 import type { PayeePaymentBundle } from "@/lib/payee-bundle";
-import { CLOAK_PROGRAM_ID, USDC_MINT } from "@/lib/constants";
+import {
+  CLOAK_PROGRAM_ID,
+  isMainnetCluster,
+  solscanTransactionUrl,
+  USDC_MINT,
+} from "@/lib/constants";
 import {
   clearSpendableUtxo,
   loadSpendableUtxo,
@@ -25,6 +30,7 @@ import { bigintToHex, sumUtxoAmounts, type Utxo, type UtxoKeypair } from "@cloak
 import type { ComplianceReport, MerkleTree } from "@cloak.dev/sdk";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { TIP } from "@/lib/ui-tips";
+import { FlowJourneyStrip } from "../shell/FlowJourneyStrip";
 import { PayrollHero } from "../shell/PayrollHero";
 import { RecipientTable } from "./RecipientTable";
 
@@ -42,10 +48,10 @@ function nkToHex(nk: Uint8Array) {
 function StepBadge({ n, label, tip }: { n: number; label: string; tip?: string }) {
   return (
     <div className="mb-3 flex items-center gap-3">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-sky-500/15 text-xs font-bold text-sky-400 ring-1 ring-sky-500/25">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-indigo-100 text-xs font-bold text-indigo-800 ring-1 ring-indigo-200/90">
         {n}
       </span>
-      <h2 className="flex items-center gap-1 text-sm font-semibold text-slate-100">
+        <h2 className="flex items-center gap-1 text-sm font-semibold text-slate-900">
         {label}
         {tip ? <InfoTip text={tip} /> : null}
       </h2>
@@ -270,21 +276,24 @@ export function PayrollDashboard() {
     : "—";
 
   return (
-    <div className="min-h-0 bg-slate-950">
+    <div className="min-h-0 bg-transparent">
       <div
         className="pointer-events-none fixed inset-0 -z-10"
         style={{
           background:
-            "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(14, 165, 233, 0.15), transparent), radial-gradient(ellipse 60% 40% at 100% 0%, rgba(100, 116, 139, 0.08), transparent), #020617",
+            "radial-gradient(ellipse 100% 60% at 50% -5%, rgba(99, 102, 241, 0.09), transparent 55%), radial-gradient(ellipse 80% 50% at 100% 0%, rgba(14, 165, 233, 0.06), transparent)",
         }}
         aria-hidden
       />
 
       <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <PayrollHero />
+        <div id="section-treasury-flow" className="mb-6 scroll-mt-24">
+          <FlowJourneyStrip variant="treasury" />
+        </div>
 
         {!connected && (
-          <p className="mb-5 rounded-lg border border-slate-800/80 bg-slate-900/40 px-3 py-2.5 text-sm text-slate-400">
+          <p className="mb-5 rounded-xl border border-indigo-200/40 bg-white/60 px-3 py-2.5 text-sm text-slate-600 shadow-sm shadow-indigo-100/20 backdrop-blur-sm">
             Connect a wallet in the header to begin — the same wallet will hold public USDC to shield and will sign each Cloak transaction.
           </p>
         )}
@@ -293,7 +302,7 @@ export function PayrollDashboard() {
           <p
             className={
               "mb-6 text-sm " +
-              (publicAtaInfo.startsWith("No") ? "text-amber-200/90" : "text-slate-400")
+              (publicAtaInfo.startsWith("No") ? "text-amber-800" : "text-slate-600")
             }
           >
             {publicAtaInfo}
@@ -302,7 +311,7 @@ export function PayrollDashboard() {
 
         {err && (
           <div
-            className="mb-6 rounded-lg border border-red-500/35 bg-red-950/50 px-4 py-3 text-sm text-red-100 shadow-sm"
+            className="mb-6 whitespace-pre-wrap break-words rounded-lg border border-red-200 bg-red-50/95 px-4 py-3 text-sm text-red-900 shadow-sm"
             role="alert"
           >
             {err}
@@ -311,7 +320,7 @@ export function PayrollDashboard() {
 
         {loading && (
           <div
-            className="mb-6 rounded-lg border border-sky-500/25 bg-sky-500/5 px-4 py-3 text-sm text-sky-100/95"
+            className="mb-6 rounded-lg border border-indigo-200/90 bg-indigo-50/90 px-4 py-3 text-sm text-indigo-950"
             aria-live="polite"
           >
             {loading.msg}
@@ -323,12 +332,12 @@ export function PayrollDashboard() {
             id="section-treasury-utxo"
             className="app-card mb-5 scroll-mt-24"
           >
-            <h2 className="flex items-center gap-1 text-sm font-semibold text-slate-200">
+            <h2 className="flex items-center gap-1 text-sm font-semibold text-slate-900">
               Treasury UTXO
               <InfoTip text={TIP.treasuryUtxo} />
             </h2>
             <p className="mt-0.5 text-xs text-slate-500">Shielded change stays on this key in this browser.</p>
-            <p className="mt-3 break-all rounded-md bg-slate-950/50 px-3 py-2 font-mono text-xs text-slate-300 ring-1 ring-slate-800/80">
+            <p className="mt-3 break-all rounded-lg border border-indigo-200/30 bg-slate-50/80 px-3 py-2 font-mono text-xs text-slate-800">
               {adminUtxoPub}
             </p>
             <dl className="mt-4 flex flex-wrap items-baseline gap-6">
@@ -337,7 +346,7 @@ export function PayrollDashboard() {
                   Shielded (private)
                   <InfoTip text={TIP.shieldedBalance} className="translate-y-px" />
                 </dt>
-                <dd className="text-lg font-semibold tabular-nums text-sky-300">
+                <dd className="text-lg font-semibold tabular-nums text-indigo-800">
                   {utxo ? formatUsdcFromUnits(shieldedBal) : "0"}{" "}
                   <span className="text-sm font-medium text-slate-500">USDC</span>
                 </dd>
@@ -352,7 +361,10 @@ export function PayrollDashboard() {
             className="app-card mb-5 scroll-mt-24"
           >
             <StepBadge n={1} label="Shield USDC" tip={TIP.shieldStep} />
-            <p className="text-sm text-slate-500">From your wallet’s public USDC balance. Start small on mainnet.</p>
+            <p className="text-sm text-slate-500">
+              From your wallet’s public USDC balance.
+              {isMainnetCluster ? " Start small on mainnet." : " Use small dev/test amounts."}
+            </p>
             <div className="mt-4 flex max-w-md flex-col gap-3 sm:flex-row sm:items-end">
               <div className="min-w-0 flex-1">
                 <span className="app-label flex w-full items-baseline justify-between gap-1">
@@ -387,9 +399,9 @@ export function PayrollDashboard() {
           >
             <StepBadge n={2} label="Payee lines" tip={TIP.runPayroll} />
             <p className="mb-3 text-sm text-slate-500">
-              64-hex UTXO keys from{" "}
-              <a className="text-sky-400/90 hover:text-sky-300" href="/payee">Payee keys</a>
-              . Empty rows skipped.
+              One row = one private payment. For each person, paste their <span className="text-slate-300">64-character receive key</span> from the{" "}
+              <a className="text-indigo-700 hover:text-indigo-900" href="/payee">Payee</a>{" "}
+              page. Skip blank rows.
             </p>
             <RecipientTable lines={lines} onChange={setLines} />
           </section>
@@ -427,24 +439,19 @@ export function PayrollDashboard() {
             className="app-card mb-6 scroll-mt-24"
           >
             <h3 className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Payee payment bundles
+              After payroll — payee payment bundles
               <InfoTip text={TIP.payeeBundle} />
             </h3>
-            <p className="mt-1 text-sm text-slate-400">
-              Send each JSON to the payee (email, chat). They paste it on the{" "}
-              <a
-                className="text-sky-400/90 underline decoration-sky-500/30 hover:text-sky-300"
-                href="/withdraw"
-              >
-                To wallet
-              </a>{" "}
-              tab with the same UTXO receive key they used here.
+            <p className="mt-1 text-sm text-slate-600">
+              <strong className="font-medium text-slate-800">Send one JSON per person you paid</strong> (email,
+              Slack, etc.). They open <span className="text-slate-800">Get paid</span>, keep the same receive key
+              they gave you, paste this JSON, connect Phantom, and run Unshield.
             </p>
             <ul className="mt-3 space-y-3">
               {payeeBundles.map((b, i) => (
                 <li
                   key={`${b.transferSignature}-${i}`}
-                  className="rounded-lg border border-slate-800/80 bg-slate-950/40 p-3"
+                  className="rounded-lg border border-indigo-100/50 bg-slate-50/80 p-3"
                 >
                   <p className="text-xs text-slate-500">
                     {b.label} — {formatUsdcFromUnits(BigInt(b.amount))} USDC
@@ -474,17 +481,17 @@ export function PayrollDashboard() {
         {lastSigs.length > 0 && (
           <section
             id="section-transactions"
-            className="app-card mb-6 scroll-mt-24 text-sm text-slate-400"
+            className="app-card mb-6 scroll-mt-24 text-sm text-slate-600"
           >
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
               Transactions
             </h3>
-            <ul className="space-y-1.5 break-all font-mono text-xs text-slate-500">
+            <ul className="space-y-1.5 break-all font-mono text-xs text-slate-600">
               {lastSigs.map((s) => (
                 <li key={s}>
                   <a
-                    className="text-sky-400 underline decoration-sky-500/30 underline-offset-2 hover:text-sky-300"
-                    href={`https://solscan.io/tx/${s}`}
+                    className="text-indigo-700 underline decoration-indigo-200/80 underline-offset-2 hover:text-indigo-900"
+                    href={solscanTransactionUrl(s)}
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -504,20 +511,20 @@ export function PayrollDashboard() {
             <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Reconciliation
             </h3>
-            <div className="mt-3 overflow-x-auto rounded-lg ring-1 ring-slate-800/80">
+            <div className="mt-3 overflow-x-auto rounded-lg ring-1 ring-indigo-100/50">
               <table className="w-full min-w-[32rem] text-left text-sm">
                 <thead>
-                  <tr className="border-b border-slate-800/90 bg-slate-950/80 text-xs text-slate-500">
+                  <tr className="border-b border-indigo-100/30 bg-slate-100/90 text-xs text-slate-600">
                     <th className="p-3 font-medium">Type</th>
                     <th className="p-3 font-medium">Net</th>
                     <th className="p-3 font-medium">Time</th>
                     <th className="p-3 font-medium">Tx</th>
                   </tr>
                 </thead>
-                <tbody className="text-slate-300">
+                <tbody className="text-slate-800">
                   {report.transactions.slice(0, 20).map((t, i) => (
-                    <tr key={i} className="border-b border-slate-800/60 last:border-0">
-                      <td className="p-3 align-top text-slate-200">{t.txType}</td>
+                    <tr key={i} className="border-b border-slate-200/70 last:border-0">
+                      <td className="p-3 align-top text-slate-800">{t.txType}</td>
                       <td className="p-3 align-top tabular-nums">
                         {t.netAmount} {t.symbol}
                       </td>
@@ -541,19 +548,22 @@ export function PayrollDashboard() {
         {viewKeyHex && (
           <section
             id="section-viewing-key"
-            className="mb-8 scroll-mt-24 rounded-xl border border-amber-500/20 bg-amber-950/25 p-5 text-sm text-amber-100/90 ring-1 ring-amber-500/10"
+            className="mb-8 scroll-mt-24 rounded-xl border border-amber-300/40 bg-gradient-to-br from-slate-100/98 via-indigo-50/40 to-amber-100/30 p-5 text-sm text-slate-800 shadow-sm shadow-amber-900/5 ring-1 ring-amber-200/35"
           >
-            <h3 className="flex items-center gap-1 text-sm font-semibold text-amber-200/95">
+            <h3 className="flex items-center gap-1 text-sm font-semibold text-amber-950/95">
               Viewing key
-              <InfoTip text={TIP.viewKey} className="[&_button]:border-amber-500/30 [&_button]:text-amber-300/90 [&_button]:hover:text-amber-200" />
+              <InfoTip
+                text={TIP.viewKey}
+                className="[&_button]:border-amber-400/50 [&_button]:bg-amber-50/80 [&_button]:text-amber-900 [&_button]:hover:border-amber-500 [&_button]:hover:bg-amber-100/60"
+              />
             </h3>
-            <p className="mt-1 text-amber-100/70">
+            <p className="mt-1 text-slate-600">
               The nk can decrypt on-chain history for this treasury. Store offline; never
               share in public channels.
             </p>
             {viewKeyRevealed ? (
               <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-start">
-                <code className="max-h-40 min-w-0 flex-1 overflow-auto break-all rounded-md bg-slate-950/60 p-3 font-mono text-[10px] leading-relaxed text-amber-50/95 ring-1 ring-slate-800/60">
+                <code className="max-h-40 min-w-0 flex-1 overflow-auto break-all rounded-md border border-slate-200/90 bg-slate-50/95 p-3 font-mono text-[10px] leading-relaxed text-slate-900 shadow-inner shadow-slate-300/20">
                   {viewKeyHex}
                 </code>
                 <button
@@ -574,7 +584,7 @@ export function PayrollDashboard() {
               <button
                 type="button"
                 onClick={() => setViewKeyRevealed(true)}
-                className="mt-3 text-left text-sm font-medium text-amber-300/95 underline decoration-amber-500/40 underline-offset-2 hover:text-amber-200"
+                className="mt-3 text-left text-sm font-medium text-amber-900/90 underline decoration-amber-400/70 underline-offset-2 hover:text-amber-950"
               >
                 Reveal 32-byte key (hex)
               </button>
@@ -586,7 +596,7 @@ export function PayrollDashboard() {
           <button
             type="button"
             onClick={() => setShowAdvanced((s) => !s)}
-            className="text-slate-500 underline decoration-slate-600 underline-offset-2 hover:text-slate-400"
+            className="text-slate-500 underline decoration-slate-300 underline-offset-2 hover:text-slate-800"
           >
             {showAdvanced ? "Hide" : "Show"} Cloak program ID
           </button>

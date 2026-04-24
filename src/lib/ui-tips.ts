@@ -2,10 +2,20 @@
 export const TIP = {
   brand:
     "Colosseum Frontier / Cloak track — shielded USDC payroll on Solana mainnet with @cloak.dev/sdk.",
-  navTreasury: "Payroll console: shield USDC, add payee UTXO lines, run private transfers, reconcile history.",
-  navPayee: "Create or load your 64-hex UTXO public key to give to the treasury. Not your Solana address.",
+  navTreasury: "Employer: shield public USDC, add payee rows, run private payroll, copy payment JSONs for your team, reconcile on-chain history.",
+  navPayee: "Get your 64-hex private-payroll key (not Phantom) to give the employer, then get paid in two steps: JSON from them, then Get paid in this app.",
   navWallet:
-    "Unshield: paste the payment bundle JSON from the treasury and send USDC to your connected wallet’s public USDC account.",
+    "When you have the payment JSON: paste it here, connect Phantom, unshield to your public USDC balance.",
+  navDemo:
+    "Automatic demo: the full path runs on its own after keys load (timed stages, no step clicking). Or Restart for a new run.",
+  navCloakPay:
+    "Cloak Pay: in-person and link pay; QR, merchant setup, customer view, and activity (prototype).",
+  cloakNavOverview: "Cloak Pay home — journey and links to subpages.",
+  cloakNavMerchant: "Display name, presets, and what you show to customers (prototype).",
+  cloakNavPresent: "Build the pay link and print or share the QR for your counter.",
+  cloakNavCustomer: "What the customer sees after scan—shielded pay flow (mock).",
+  cloakNavActivity: "Recent in-person and link payments (sample data for demo).",
+  cloakNavSettings: "Disclosure and environment; not a custodial product.",
   utxoPublicKey:
     "Cloak’s shielded address: 64 hex characters. The treasury pastes it into payroll so funds route to your private UTXO — not a normal wallet address.",
   payeeName: "A label for you to remember the row (e.g. contractor or invoice id).",
@@ -38,10 +48,14 @@ export const TIP = {
   generatePayeeKey:
     "Creates a new random Cloak UTXO keypair in this browser and stores it in local storage. Download a JSON backup; without the private part you cannot unshield what is paid to this UTXO.",
   importKeyJson:
-    "Paste the JSON you exported from Payee keys (privateKey + publicKey as decimal strings). It must match the 64-hex the treasury used when paying you.",
+    "Paste the full object from Payee (Copy as JSON) or the downloaded .json, or use Load from file. privateKey and publicKey are long decimal strings in quotes. It must be the same key the treasury used for your 64-hex line.",
   walletConnect:
     "Connect Phantom (or another supported adapter) to sign on-chain USDC and Cloak instructions. The treasury and payee pages use the same connection control.",
   copyPublicHex: "Copy your 64-character public key for email, Slack, or the payroll form.",
+  payeeCopyKeyJson:
+    "Exact JSON you can paste into Get paid (Import) on another browser — same as the download file, without saving a file. Treat it like a password; anyone with it can unshield if they also get a payment JSON.",
+  payeeShowSecret:
+    "Your private and public UTXO values as long decimal numbers (same as in the JSON file). You need the private one to unshield. Never post these in public channels.",
   footerBounty: "Read the Colosseum Frontier / Cloak track brief (Superteam listing).",
   footerCloak: "Cloak: shielded program on Solana. Official product site.",
 } as const;

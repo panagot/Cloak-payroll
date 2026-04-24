@@ -2,8 +2,8 @@
 
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { useCallback, useEffect, useState } from "react";
-import { USDC_MINT } from "@/lib/constants";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { solscanTransactionUrl, USDC_MINT } from "@/lib/constants";
 import { withdrawUtxoToPublicWallet } from "@/lib/cloak/payee-withdraw";
 import { formatCloakError } from "@/lib/cloak/errors";
 import { formatUsdcFromUnits } from "@/lib/amounts";
@@ -11,13 +11,16 @@ import { parsePayeeBundleJson, utxoFromBundle, type PayeePaymentBundle } from "@
 import {
   clearPayeeUtxoKeypair,
   loadPayeeUtxoKeypair,
+  parsePayeeUtxoKeyFromJsonText,
   savePayeeUtxoKeypair,
 } from "@/lib/payee-key-storage";
 import { getAssociatedTokenAddress, getAccount } from "@solana/spl-token";
 import { bigintToHex, generateUtxoKeypair, type UtxoKeypair } from "@cloak.dev/sdk";
 import Link from "next/link";
-import { AppLabelWithTip, InfoTip } from "@/components/ui/InfoTip";
+import { InfoTip } from "@/components/ui/InfoTip";
+import { FlowJourneyStrip, UnshieldClarify } from "@/components/shell/FlowJourneyStrip";
 import { LINKS } from "@/lib/site-links";
+import { useTimedMessage } from "@/hooks/use-timed-message";
 import { TIP } from "@/lib/ui-tips";
 
 export function PayeeWithdraw() {
@@ -30,24 +33,41 @@ export function PayeeWithdraw() {
   const [loading, setLoading] = useState<string | null>(null);
   const [publicUsdc, setPublicUsdc] = useState<string | null>(null);
   const [lastSig, setLastSig] = useState<string | null>(null);
+  const [importOk, setImportOk] = useState<string | null>(null);
+  const importTextareaId = useId();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { message: copyStatus, flash: copyFlash } = useTimedMessage(2200);
 
   useEffect(() => {
     setKeypair(loadPayeeUtxoKeypair());
   }, []);
 
+  useEffect(() => {
+    if (!importOk) return;
+    const t = setTimeout(() => setImportOk(null), 6000);
+    return () => clearTimeout(t);
+  }, [importOk]);
+
   const onImportKey = () => {
     setErr(null);
+    setImportOk(null);
     try {
-      const j: unknown = JSON.parse(importKeyText.trim());
-      if (!j || typeof j !== "object" || !("privateKey" in j) || !("publicKey" in j)) {
-        throw new Error("Expected { privateKey, publicKey } as strings.");
-      }
-      const p = (j as { privateKey: string; publicKey: string }).privateKey;
-      const pub = (j as { privateKey: string; publicKey: string }).publicKey;
-      const kp: UtxoKeypair = { privateKey: BigInt(p), publicKey: BigInt(pub) };
+      const kp = parsePayeeUtxoKeyFromJsonText(importKeyText);
       savePayeeUtxoKeypair(kp);
+      const reread = loadPayeeUtxoKeypair();
+      if (!reread || reread.publicKey !== kp.publicKey) {
+        setKeypair(kp);
+        setImportKeyText("");
+        setErr(
+          "Key loaded for this session only: this browser blocked saving to storage (private window, or storage full). Unshield in this same tab, or use a normal window."
+        );
+        return;
+      }
       setKeypair(kp);
       setImportKeyText("");
+      setImportOk(
+        "Key saved. The 64-hex in step 1 is your private-payroll address (for your employer), not your Phantom. Next: paste the JSON, connect Phantom, then Unshield."
+      );
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Invalid key JSON");
     }
@@ -95,17 +115,17 @@ export function PayeeWithdraw() {
       return;
     }
     if (!keypair) {
-      setErr("Set your receive key here (or import a backup), or go to Payee keys first.");
+      setErr("Set your receive key first (import backup or go to Payee keys).");
       return;
     }
     let bundle: PayeePaymentBundle;
     try {
       bundle = parsePayeeBundleJson(bundleText.trim());
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Paste the JSON bundle the treasury sent after payment.");
+      setErr(e instanceof Error ? e.message : "Paste the payment JSON your employer sent.");
       return;
     }
-    setLoading("Building UTXO and withdrawing to your wallet (proof + sign)…");
+    setLoading("Unshielding — building proof and signing (can take a minute)…");
     try {
       const utxo = utxoFromBundle(bundle, keypair);
       const r = await withdrawUtxoToPublicWallet(
@@ -127,12 +147,12 @@ export function PayeeWithdraw() {
   };
 
   return (
-    <div className="min-h-0 bg-slate-950">
+    <div className="min-h-0 bg-transparent">
       <div
         className="pointer-events-none fixed inset-0 -z-10"
         style={{
           background:
-            "radial-gradient(ellipse 60% 45% at 50% -10%, rgba(14, 165, 233, 0.12), transparent), #020617",
+            "radial-gradient(ellipse 100% 55% at 50% -5%, rgba(99, 102, 241, 0.1), transparent 55%)",
         }}
         aria-hidden
       />
@@ -140,60 +160,88 @@ export function PayeeWithdraw() {
         id="section-withdraw-panel"
         className="mx-auto max-w-3xl scroll-mt-24 px-4 py-6 sm:px-6 sm:py-8 lg:px-8"
       >
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sky-400/85">
-          Unshield to your wallet
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-indigo-600">
+          Get paid (unshield)
         </p>
-        <h1 className="mt-1.5 flex flex-wrap items-baseline gap-2 text-2xl font-semibold tracking-tight text-slate-50 sm:text-3xl">
-          <span>Send USDC to my Solana wallet</span>
+        <h1 className="mt-1.5 flex flex-wrap items-baseline gap-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+          <span>Move private USDC to your Phantom</span>
           <InfoTip text={TIP.unshieldButton} className="translate-y-0.5" />
         </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-          After a treasury has paid you privately, they share a <span className="text-slate-200">payment bundle</span> (JSON) from
-          the payroll result. You paste it here, connect the wallet that should <span className="text-slate-200">receive the public
-          USDC</span> (e.g. Phantom), and we run one Cloak withdraw to that wallet&apos;s address.
-        </p>
 
-        <ol className="mt-4 list-decimal space-y-1.5 pl-4 text-sm text-slate-500">
-          <li>Keep the same <strong className="text-slate-300">UTXO receive key</strong> you used on the Payee keys page (or import a backup below).</li>
-          <li>Paste the <strong className="text-slate-300">payment bundle</strong> JSON the treasury sent after a successful line.</li>
-          <li>Connect your Solana wallet — that address receives the visible USDC when you unshield.</li>
-        </ol>
-        <p className="mt-3 text-xs text-slate-500">
-          Details:{" "}
+        <UnshieldClarify>
+          <strong>Flow in one sentence:</strong> key (step 1) + payment <strong>JSON from HR</strong> (step 2) +
+          Phantom in the header (step 3) → <strong>Unshield</strong> (step 4). <strong>Not</strong> a normal
+          “send to address” in Phantom — the employer pays the shielded pool; you pull USDC to public here.
+        </UnshieldClarify>
+
+        <p className="mt-2 text-xs text-slate-500">
           <a
-            className="text-sky-400/90 hover:text-sky-300"
+            className="text-indigo-600 hover:text-indigo-800"
             href={LINKS.sdkDocs}
             target="_blank"
             rel="noreferrer"
-            title="Cloak SDK: transaction building, UTXO model, and API reference (opens in a new tab)."
+            title="Cloak SDK documentation (opens in a new tab)"
           >
-            Cloak SDK
-          </a>
-          .
+            SDK reference
+          </a>{" "}
+          for advanced troubleshooting.
         </p>
 
-        <div className="app-card mt-6">
-          <h2 className="flex flex-wrap items-baseline gap-1.5 text-sm font-semibold text-slate-200">
-            <span>1. Your UTXO receive key</span>
+        <div className="mb-6 mt-5">
+          <FlowJourneyStrip variant="payee-unshield" />
+        </div>
+
+        <div className="app-card mt-2">
+          <h2 className="flex flex-wrap items-baseline gap-1.5 text-sm font-semibold text-slate-900">
+            <span>1. Your private-payroll key</span>
             <InfoTip text={TIP.withdrawKey} />
           </h2>
           {keypair ? (
             <div className="mt-3 space-y-2">
               <p className="text-xs text-slate-500">
-                UTXO public (share with treasuries) — 64 hex
+                <span className="text-slate-800">Public part (64 hex)</span> — for your <strong>employer</strong> to
+                pay the shielded pool, <span className="text-amber-800">not</span> the same as your Solana/Phantom
+                address in step 3.
               </p>
-              <p className="break-all font-mono text-xs text-slate-300">
-                {bigintToHex(keypair.publicKey)}
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <p className="min-w-0 flex-1 break-all font-mono text-xs text-slate-800">
+                  {bigintToHex(keypair.publicKey)}
+                </p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(bigintToHex(keypair.publicKey));
+                      setErr(null);
+                      copyFlash("64-hex copied");
+                    } catch {
+                      setErr("Copy failed — select the hex and copy manually.");
+                    }
+                  }}
+                  className="btn-secondary w-full shrink-0 sm:mt-0 sm:w-auto"
+                  title={TIP.copyPublicHex}
+                >
+                  Copy 64-hex
+                </button>
+              </div>
+              {copyStatus && keypair && (
+                <p className="text-xs text-emerald-800" role="status" aria-live="polite">
+                  {copyStatus}
+                </p>
+              )}
+              <p className="text-[11px] text-slate-600">
+                Payout to Phantom only happens in step 4, after a JSON from your employer, your wallet, and
+                “Unshield”. A <strong>transaction link</strong> below means it worked.
               </p>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={makeNewKey}
+                  onClick={() => void makeNewKey()}
                   className="btn-secondary"
                   disabled={!!loading}
                   title={TIP.generatePayeeKey}
                 >
-                  Generate a new key (replaces this browser&apos;s key)
+                  Generate new key (replaces this browser)
                 </button>
                 <button
                   type="button"
@@ -201,54 +249,109 @@ export function PayeeWithdraw() {
                     void clearPayeeUtxoKeypair();
                     setKeypair(null);
                   }}
-                  className="text-xs text-slate-500 underline hover:text-slate-300"
+                  className="text-xs text-slate-500 underline hover:text-slate-800"
                 >
                   Clear from this device
                 </button>
               </div>
             </div>
           ) : (
-            <p className="mt-2 text-sm text-amber-200/90">
+            <p className="mt-2 text-sm text-amber-900">
               No key in this browser. Open{" "}
-              <Link href="/payee" className="font-medium text-sky-400 hover:text-sky-300">Payee keys</Link> and generate one, or import a
-              saved backup.
+              <Link href="/payee" className="font-medium text-indigo-600 hover:text-indigo-800">
+                Payee
+              </Link>{" "}
+              to generate, or import a JSON backup here.
             </p>
           )}
 
-          <div className="mt-4 border-t border-slate-800/80 pt-4">
-            <label>
-              <AppLabelWithTip label="Import key backup (JSON from file)" tip={TIP.importKeyJson} />
-              <p className="text-xs text-slate-500">
-                <code className="text-slate-400">{"{ \"privateKey\": \"...\", \"publicKey\": \"...\" }"}</code>
+          <div className="mt-4 border-t border-indigo-100/50 pt-4">
+            <div>
+              <label htmlFor={importTextareaId} className="block">
+                <span className="app-label flex w-full items-baseline justify-between gap-1">
+                  <span className="tracking-wide">Import key backup (paste or load file)</span>
+                  <InfoTip text={TIP.importKeyJson} className="translate-y-px" />
+                </span>
+              </label>
+              <p className="mt-1 text-xs text-slate-500">
+                Same object as the Payee <strong>Download</strong> / <strong>Copy as JSON</strong> — two decimal
+                strings, <code className="text-slate-700">{"privateKey"}</code> and{" "}
+                <code className="text-slate-700">{"publicKey"}</code>.
               </p>
+              <p className="text-xs text-slate-500">
+                <code className="text-slate-700">{"{ \"privateKey\": \"...\", \"publicKey\": \"...\" }"}</code>
+              </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/json,.json"
+                className="sr-only"
+                aria-label="Load key backup from a JSON file"
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = "";
+                  if (!f) return;
+                  try {
+                    const s = await f.text();
+                    setImportKeyText(s);
+                    setErr(null);
+                  } catch (ex) {
+                    setErr(ex instanceof Error ? ex.message : "Could not read file");
+                  }
+                }}
+              />
               <textarea
+                id={importTextareaId}
                 className="app-input font-mono text-xs"
                 rows={3}
                 value={importKeyText}
-                onChange={(e) => setImportKeyText(e.target.value)}
+                onChange={(e) => {
+                  setImportKeyText(e.target.value);
+                  setErr(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && importKeyText.trim()) {
+                    e.preventDefault();
+                    onImportKey();
+                  }
+                }}
                 placeholder='{"privateKey":"…","publicKey":"…"}'
                 title={TIP.importKeyJson}
               />
-              <button
-                type="button"
-                onClick={onImportKey}
-                className="btn-secondary mt-2"
-                disabled={!importKeyText.trim() || !!loading}
-                title="Load this JSON into this browser and replace the stored UTXO key if valid."
-              >
-                Import
-              </button>
-            </label>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onImportKey}
+                  className="btn-secondary"
+                  disabled={!importKeyText.trim()}
+                  title="Load this JSON into this browser and replace the stored UTXO key if valid."
+                >
+                  Import
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-xs text-indigo-600 hover:text-indigo-800"
+                >
+                  Load from file…
+                </button>
+                <span className="text-xs text-slate-400" aria-hidden>
+                  ·
+                </span>
+                <span className="text-xs text-slate-500">Ctrl+Enter in the box also runs Import</span>
+              </div>
+            </div>
           </div>
         </div>
 
         <div className="app-card mt-5">
-          <h2 className="flex flex-wrap items-baseline gap-1.5 text-sm font-semibold text-slate-200">
-            <span>2. Payment bundle (from treasury)</span>
+          <h2 className="flex flex-wrap items-baseline gap-1.5 text-sm font-semibold text-slate-900">
+            <span>2. JSON from your employer (after they paid a line)</span>
             <InfoTip text={TIP.paymentBundle} />
           </h2>
           <p className="mt-1 text-xs text-slate-500">
-            Paste the entire JSON the treasury copies after a successful private payroll to your UTXO key.
+            Paste the <strong>whole</strong> file or message you received — the same format they copied from “Payee
+            payment bundles” in their Treasury app.
           </p>
           <textarea
             className="app-input font-mono text-xs"
@@ -261,11 +364,11 @@ export function PayeeWithdraw() {
         </div>
 
         <div className="app-card mt-5">
-          <h2 className="flex flex-wrap items-baseline gap-1.5 text-sm font-semibold text-slate-200">
-            <span>3. Destination wallet (public USDC)</span>
+          <h2 className="flex flex-wrap items-baseline gap-1.5 text-sm font-semibold text-slate-900">
+            <span>3. Which Phantom should receive the USDC</span>
             <InfoTip text={TIP.withdrawWallet} />
           </h2>
-          <p className="mt-1 text-xs text-slate-500">Use the same wallet in the header to sign the withdraw.</p>
+          <p className="mt-1 text-xs text-slate-500">Connect the wallet in the header — you sign the unshield to that address.</p>
           <div
             className="mt-3 flex flex-wrap items-center gap-3"
             title={TIP.walletConnect}
@@ -279,6 +382,7 @@ export function PayeeWithdraw() {
         </div>
 
         <div className="mt-5">
+          <p className="mb-2 text-center text-xs font-medium uppercase tracking-wide text-slate-500 md:text-left">4. Confirm</p>
           <button
             type="button"
             onClick={() => void onWithdraw()}
@@ -286,29 +390,37 @@ export function PayeeWithdraw() {
             className="btn-primary w-full min-h-[2.75rem] sm:w-auto"
             title={TIP.unshieldButton}
           >
-            Unshield USDC to connected wallet
+            Unshield to connected Phantom
           </button>
         </div>
 
+        {importOk && !err && (
+          <div
+            className="mt-5 rounded-lg border border-emerald-200/90 bg-emerald-50/95 px-4 py-3 text-sm text-emerald-950"
+            role="status"
+          >
+            {importOk}
+          </div>
+        )}
         {err && (
           <div
-            className="mt-5 rounded-lg border border-red-500/35 bg-red-950/50 px-4 py-3 text-sm text-red-100"
+            className="mt-5 whitespace-pre-wrap break-words rounded-lg border border-red-200/90 bg-red-50/95 px-4 py-3 text-sm text-red-900"
             role="alert"
           >
             {err}
           </div>
         )}
         {loading && (
-          <p className="mt-4 text-sm text-sky-200/90" aria-live="polite">
+          <p className="mt-4 text-sm text-indigo-800" aria-live="polite">
             {loading}
           </p>
         )}
         {lastSig && (
-          <div className="app-card mt-4 text-sm text-slate-400">
-            <p className="text-slate-200">Unshield complete.</p>
+          <div className="app-card mt-4 text-sm text-slate-600">
+            <p className="text-slate-800">Unshield complete.</p>
             <a
-              className="mt-1 inline-block break-all text-sky-400 hover:text-sky-300"
-              href={`https://solscan.io/tx/${lastSig}`}
+              className="mt-1 inline-block break-all text-indigo-600 hover:text-indigo-800"
+              href={solscanTransactionUrl(lastSig)}
               target="_blank"
               rel="noreferrer"
             >
@@ -318,11 +430,11 @@ export function PayeeWithdraw() {
         )}
 
         <p className="mt-6 text-sm text-slate-500">
-          <Link className="text-sky-400/90 hover:text-sky-300" href="/payee">
-            ← Payee keys
+          <Link className="text-indigo-600 hover:text-indigo-800" href="/payee">
+            ← Payee
           </Link>
           <span className="mx-2">·</span>
-          <Link className="text-sky-400/90 hover:text-sky-300" href="/">
+          <Link className="text-indigo-600 hover:text-indigo-800" href="/">
             Treasury
           </Link>
         </p>
