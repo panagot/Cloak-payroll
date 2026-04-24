@@ -4,11 +4,9 @@ import { useState } from "react";
 
 const STORAGE_KEY = "ct_vercel_rpc_banner_dismissed_v1";
 
-/**
- * Shown on builds produced on Vercel (see next.config env). Wallet + SPL reads need a
- * mainnet JSON-RPC. Helius/others often 403 in the browser if the key’s allowed domains
- * or API product don’t include this host — not a missing key, usually dashboard config.
- */
+const REPO_URL = "https://github.com/panagot/Cloak-payroll";
+
+/** Shown on Vercel builds; short nudge: configure your own RPC. Full steps are in the repo. */
 export function VercelDeploymentRpcBanner() {
   const onVercel = process.env.NEXT_PUBLIC_ON_VERCEL === "1";
   const [dismissed, setDismissed] = useState(() => {
@@ -26,16 +24,20 @@ export function VercelDeploymentRpcBanner() {
     <div
       className="relative z-[55] border-b border-sky-200/60 bg-sky-50/95 px-3 py-2 pr-10 text-center text-[11px] leading-relaxed text-sky-950"
       role="region"
-      aria-label="Vercel deployment: RPC configuration"
+      aria-label="Vercel deployment: self-host configuration"
     >
       <p>
-        <strong className="font-semibold">Deployed on Vercel</strong> — for wallet USDC and on-chain calls to work, set
-        a <strong>mainnet</strong> <code className="rounded border border-sky-200/80 bg-white/90 px-1">NEXT_PUBLIC_SOLANA_RPC</code> in{" "}
-        <strong>Project → Settings → Environment Variables</strong> (Helius, QuickNode, Alchemy, etc.). In the
-        provider dashboard, <strong>allow this site’s host</strong> (your{" "}
-        <code className="text-[10px]">*.vercel.app</code> and custom domain); otherwise you may get{" "}
-        <code className="text-[10px]">403 / API key is not allowed</code> even with a valid key. Redeploy after
-        changes.
+        Use your own Solana API key (e.g. Helius) in environment variables. Setup details and code are in the open-source
+        repo:{" "}
+        <a
+          href={REPO_URL}
+          className="font-medium text-sky-900 underline decoration-sky-300/80 underline-offset-2 hover:text-sky-950"
+          target="_blank"
+          rel="noreferrer"
+        >
+          github.com/panagot/Cloak-payroll
+        </a>
+        .
       </p>
       <button
         type="button"

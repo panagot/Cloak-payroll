@@ -2,6 +2,8 @@
 
 A small **treasury console** for teams that need **USDC payroll to contractors without publishing per-person amounts and relationships on a block explorer**. The app uses [Cloak](https://cloak.ag) on **Solana mainnet**: you shield USDC from a connected wallet, then pay each person’s **shielded UTXO public key** (not their Solana address) with a sequence of **private `transfer` calls** from the [@cloak.dev/sdk](https://www.npmjs.com/package/@cloak.dev/sdk). You reconcile in-app with a **32-byte viewing key (nk)** via `scanTransactions` / compliance-style reporting.
 
+The same codebase also includes **Cloak Pay** — a **prototype in-person and link-based checkout** at [`/cloak-pay`](http://localhost:3000/cloak-pay): merchants generate a **shielded UTXO receive key** (64-hex, same family as payee keys), set a display name, and build **pay links and QR codes** that pass the merchant UTXO public key as `mpk` in the customer URL. **Customer pay** simulates a shielded flow; **Activity** is sample data. All of that is UI + `localStorage` for demos, not a custodial backend.
+
 ## The problem and who it is for
 
 - **Problem**: On Solana, ordinary token transfers are fully public. Payroll-like flows leak salary and counterparty data permanently.
@@ -58,6 +60,21 @@ The app reads **`NEXT_PUBLIC_SOLANA_NETWORK`** (`mainnet-beta` default, or `devn
 - Contractors open [`/payee`](http://localhost:3000/payee), generate a **receive key** (UTXO public key, 64 hex chars), and send it to the admin.  
 - The admin pastes that into the payroll table — **not** the Solana address.
 
+### Cloak Pay (merchant in-person & link pay)
+
+Cloak Pay is a **second product surface** in the app, focused on **counter and shareable pay links** rather than employer → contractor payroll.
+
+| Area | What it is |
+|------|------------|
+| **Overview** | [`/cloak-pay`](http://localhost:3000/cloak-pay) — journey, links to subpages. |
+| **Merchant** | [`/cloak-pay/merchant`](http://localhost:3000/cloak-pay/merchant) — **generate a shielded UTXO receive key** (store + 64-hex as in the payee flow), business name, default amounts, **pay link + QR** (encoded URL includes `mpk` = merchant public UTXO hex for integration demos). |
+| **Customer pay** | [`/cloak-pay/pay`](http://localhost:3000/cloak-pay/pay) — checkout UI; reads `label`, `amount`, `source`, `mpk` from the query string. |
+| **Activity** | Sample payment list; export is a stub. |
+| **Settings** | Cluster, disclosure, links. |
+
+- **Legacy URL:** `/cloak-pay/present` **redirects** to `/cloak-pay/merchant` (link & QR live on the merchant page).  
+- **Vercel / RPC:** This app needs a **working** `NEXT_PUBLIC_SOLANA_RPC` (your own Helius/QuickNode key) in the host’s environment for wallet and token reads in production. Setup is documented in this repo; a short **blue banner** on Vercel builds points here.
+
 ### Local persistence
 
 - A **treasury UTXO keypair** and the last **spendable serialized UTXO** are kept in `localStorage` in this browser so you can continue after refresh. This is a hackathon tradeoff; production apps would use safer key storage.
@@ -75,7 +92,8 @@ npm start
 2. **Deposit** — shield USDC; mention ZK proof + relay.  
 3. **Pay** — two payee lines, run payroll; show Solscan where amounts/counterparties are not the story.  
 4. **Reconcile** — “Reconcile (scan on-chain)”; show decrypted-style rows.  
-5. **Viewing key** — show reveal + “store nk offline” + why auditors matter in real life.
+5. **Viewing key** — show reveal + “store nk offline” + why auditors matter in real life.  
+6. **(Optional) Cloak Pay** — [`/cloak-pay/merchant`](http://localhost:3000/cloak-pay/merchant): receive key → QR / pay link → open **Customer pay** with `mpk` in the URL.
 
 ## References
 
