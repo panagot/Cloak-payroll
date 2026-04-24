@@ -1,7 +1,11 @@
 "use client";
 
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { getAssociatedTokenAddress, getAccount } from "@solana/spl-token";
+import {
+  getAccount,
+  getAssociatedTokenAddress,
+  TokenAccountNotFoundError,
+} from "@solana/spl-token";
 import { useCallback, useEffect, useState } from "react";
 import { ensureAdminUtxoKeypair } from "@/lib/admin-utxo";
 import { formatUsdcFromUnits, parseUsdcToUnits } from "@/lib/amounts";
@@ -109,9 +113,19 @@ export function PayrollDashboard() {
       setPublicAtaInfo(
         `Visible USDC in this wallet: ${formatUsdcFromUnits(BigInt(a.amount))} (on-chain, public).`
       );
-    } catch {
+    } catch (e) {
+      if (e instanceof TokenAccountNotFoundError) {
+        setPublicAtaInfo(
+          "No USDC token account yet — fund this wallet with USDC before shielding."
+        );
+        return;
+      }
+      const hint =
+        e instanceof Error
+          ? e.message
+          : "Unknown error (often RPC or wrong cluster vs Phantom).";
       setPublicAtaInfo(
-        "No USDC token account yet — fund this wallet with USDC before shielding."
+        `Could not read your USDC balance: ${hint} If you hold USDC on mainnet, set Phantom to Mainnet and match Vercel env NEXT_PUBLIC_SOLANA_NETWORK=mainnet-beta.`
       );
     }
   }, [connection, publicKey]);
