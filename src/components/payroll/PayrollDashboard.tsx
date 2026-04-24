@@ -124,8 +124,14 @@ export function PayrollDashboard() {
         e instanceof Error
           ? e.message
           : "Unknown error (often RPC or wrong cluster vs Phantom).";
+      const helius403 =
+        hint.includes("403") || hint.includes("-32052") || hint.toLowerCase().includes("not allowed");
       setPublicAtaInfo(
-        `Could not read your USDC balance: ${hint} If you hold USDC on mainnet, set Phantom to Mainnet and match Vercel env NEXT_PUBLIC_SOLANA_NETWORK=mainnet-beta.`
+        `Could not read your USDC balance: ${hint} ` +
+          (helius403
+            ? "If you use Helius, open the Helius dashboard and allow this deployment’s host (Vercel URL / custom domain) for your API key, then redeploy. "
+            : "") +
+          `If you hold USDC on mainnet, set Phantom to Mainnet and match Vercel env NEXT_PUBLIC_SOLANA_NETWORK=mainnet-beta.`
       );
     }
   }, [connection, publicKey]);
